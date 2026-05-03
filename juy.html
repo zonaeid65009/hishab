@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্মার্ট ডিজিটাল হাব - মেস ও প্রোডাক্টিভিটি</title>
+    
+    <!-- External Resources -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&family=Amiri&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6366f1; --secondary: #a855f7; --success: #22c55e;
+            --danger: #ef4444; --warning: #f59e0b; --info: #06b6d4;
+            --bg-light: #f8fafc; --card-light: #ffffff; --text-light: #1e293b;
+            --border-light: #e2e8f0; --bg-dark: #0f172a; --card-dark: #1e293b;
+            --text-dark: #f1f5f9; --border-dark: #334155; --transition: all 0.3s ease;
+        }
+
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg-light); color: var(--text-light); margin: 0; transition: var(--transition); }
+        body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
+        .app-container { max-width: 1200px; margin: 0 auto; padding: 20px; padding-bottom: 100px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center; padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px; color: white; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3); margin-bottom: 25px;
+        }
+
+        .nav-scroller { display: flex; gap: 12px; padding: 10px 5px; margin-bottom: 25px; overflow-x: auto; scrollbar-width: none; }
+        .nav-scroller::-webkit-scrollbar { display: none; }
+        .nav-btn {
+            white-space: nowrap; padding: 12px 20px; border-radius: 15px; border: 1px solid var(--border-light);
+            background: var(--card-light); color: var(--text-light); cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; transition: var(--transition);
+        }
+        .dark-mode .nav-btn { background: var(--card-dark); border-color: var(--border-dark); color: var(--text-dark); }
+        .nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .content-section { display: none; animation: fadeIn 0.5s ease; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--card-light); border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border-light); }
+        .dark-mode .card { background: var(--card-dark); border-color: var(--border-dark); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { padding: 15px; border-radius: 15px; text-align: center; background: var(--bg-light); border: 1px solid var(--border-light); }
+        .dark-mode .stat-card { background: #1e293b; border-color: var(--border-dark); }
+        .stat-card span { font-size: 20px; font-weight: 700; color: var(--primary); display: block; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: var(--bg-light); padding: 12px; border-bottom: 2px solid var(--border-light); }
+        .dark-mode th { background: #1e293b; border-color: var(--border-dark); }
+        td { padding: 10px; text-align: center; border-bottom: 1px solid var(--border-light); }
+        .dark-mode td { border-color: var(--border-dark); }
+
+        input, select, textarea { padding: 10px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-light); color: var(--text-light); width: 100%; box-sizing: border-box; }
+        .dark-mode input, .dark-mode select, .dark-mode textarea { background: #0f172a; border-color: var(--border-dark); color: var(--text-dark); }
+
+        .btn { padding: 12px 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; color: white; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background: var(--primary); } .btn-success { background: var(--success); } .btn-warning { background: var(--warning); } .btn-danger { background: var(--danger); } .btn-pdf { background: #34495e; }
+
+        /* Quran Hub Styles */
+        .arabic-text { font-family: 'Amiri', serif; font-size: 28px; direction: rtl; text-align: right; margin-bottom: 10px; line-height: 1.8; }
+        .bangla-text { font-size: 16px; color: var(--primary); }
+
+        @media (max-width: 768px) {
+            .nav-scroller { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-light); padding: 15px; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+            .dark-mode .nav-scroller { background: var(--card-dark); }
+            .app-container { padding-bottom: 100px; }
+        }
+
+        /* PDF Styles */
+        #pdf-template { display: none; padding: 30px; background: white; color: black; }
+        .pdf-header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="logo"><i class="fa-solid fa-shapes"></i> স্মার্ট ডিজিটাল হাব</div>
+        <button class="btn" style="background:rgba(255,255,255,0.2)" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+    </header>
+
+    <div class="nav-scroller">
+        <button class="nav-btn active" onclick="showTab('dashboard', this)"><i class="fa-solid fa-chart-line"></i> ড্যাশবোর্ড</button>
+        <button class="nav-btn" onclick="showTab('quran', this)"><i class="fa-solid fa-book-quran"></i> কুরআন হাব</button>
+        <button class="nav-btn" onclick="showTab('namaz', this)"><i class="fa-solid fa-mosque"></i> নামাজ</button>
+        <button class="nav-btn" onclick="showTab('study', this)"><i class="fa-solid fa-book-open"></i> পড়াশোনা</button>
+        <button class="nav-btn" onclick="showTab('mess', this)"><i class="fa-solid fa-utensils"></i> মেস ম্যানেজার</button>
+        <button class="nav-btn" onclick="showTab('finance', this)"><i class="fa-solid fa-wallet"></i> খরচ</button>
+    </div>
+
+    <!-- Date Picker -->
+    <div class="card" style="text-align: center; padding: 15px;">
+        <label>📅 <b>তারিখ:</b> </label>
+        <input type="date" id="main-date" style="width: auto; display: inline-block;" onchange="loadAllData()">
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="content-section active">
+        <div class="stats-grid">
+            <div class="stat-card"><b>নামাজ</b><span id="dash-namaz">0/5</span></div>
+            <div class="stat-card"><b>পড়াশোনা</b><span id="dash-study">0h</span></div>
+            <div class="stat-card"><b>আজকের খরচ</b><span id="dash-expense">0৳</span></div>
+            <div class="stat-card"><b>মিল রেট</b><span id="dash-mealrate">0.0</span></div>
+        </div>
+        <div class="card">
+            <div style="height: 300px;"><canvas id="activityChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Quran Hub -->
+    <div id="quran" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-book-quran"></i> আল-কুরআন হাব</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <select id="surah-select" onchange="fetchQuranData()"><option value="">সূরা নির্বাচন করুন</option></select>
+                <select id="quran-mode" onchange="fetchQuranData()">
+                    <option value="both">আরবি + বাংলা</option>
+                    <option value="arabic">শুধু আরবি</option>
+                </select>
+            </div>
+            <audio id="quran-player" controls style="width: 100%; margin-bottom: 20px;"></audio>
+            <div id="quran-content" style="max-height: 500px; overflow-y: auto; padding: 10px; background: var(--bg-light); border-radius: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Mess Manager -->
+    <div id="mess" class="content-section">
+        <div id="mess-report-area">
+            <div class="stats-grid">
+                <div class="stat-card"><b>মোট বাজার</b><span id="mess-total-bazar">0</span>৳</div>
+                <div class="stat-card"><b>মোট মিল</b><span id="mess-total-meal">0</span></div>
+                <div class="stat-card"><b>মিল রেট</b><span id="mess-rate">0.0</span>৳</div>
+                <div class="stat-card"><b>অন্যান্য খরচ</b><input type="number" id="mess-extra" value="0" oninput="calcMess()"></div>
+            </div>
+            <div class="card">
+                <h2><i class="fa-solid fa-users"></i> মেস মিল শিট</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>নাম</th><th>মিল</th><th>জমা</th><th>ব্যালেন্স</th><th>#</th></tr></thead>
+                        <tbody id="mess-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px;">
+            <button class="btn btn-success" onclick="addMessRow()">+ সদস্য</button>
+            <button class="btn btn-primary" onclick="saveMess()">সেভ করুন</button>
+            <button class="btn btn-warning" onclick="shareMess()"><i class="fa-solid fa-share"></i> শেয়ার</button>
+            <button class="btn btn-pdf" onclick="downloadMessPDF()"><i class="fa-solid fa-file-pdf"></i> PDF ডাউনলোড</button>
+        </div>
+        <textarea id="mess-note" placeholder="মেস নোট..." style="margin-top: 15px; height: 70px;"></textarea>
+    </div>
+
+    <!-- Namaz -->
+    <div id="namaz" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-mosque"></i> নামাজ ট্র্যাকার</h2>
+            <table><thead><tr><th>ওয়াক্ত</th><th>আদায়</th><th>জামায়াত</th><th>কাযা</th></tr></thead><tbody id="namaz-table-body"></tbody></table>
+            <button class="btn btn-primary" onclick="saveNamaz()" style="width: 100%; margin-top: 15px;">সেভ করুন</button>
+        </div>
+    </div>
+
+    <!-- Study -->
+    <div id="study" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-book-open"></i> পড়াশোনা</h2>
+            <div style="margin-bottom: 15px;">টার্গেট: <input type="number" id="study-target" value="5" style="width: 60px;"> ঘণ্টা</div>
+            <table><thead><tr><th>বিষয়</th><th>ঘণ্টা</th><th>মিনিট</th><th>#</th></tr></thead><tbody id="study-table-body"></tbody></table>
+            <button class="btn btn-warning" onclick="addStudyRow()" style="margin-top: 10px;">+ বিষয়</button>
+            <button class="btn btn-primary" onclick="saveStudy()" style="margin-top: 10px;">সেভ করুন</button>
+        </div>
+    </div>
+
+    <!-- Finance -->
+    <div id="finance" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-wallet"></i> দৈনিক খরচ</h2>
+            <input type="number" id="daily-income" placeholder="আজকের বাজেট/আয়" style="margin-bottom: 15px;">
+            <table><thead><tr><th>বিবরণ</th><th>টাকা</th><th>#</th></tr></thead><tbody id="expense-table-body"></tbody></table>
+            <button class="btn btn-warning" onclick="addExpenseRow()" style="margin-top: 10px;">+ খরচ</button>
+            <button class="btn btn-primary" onclick="saveFinance()" style="margin-top: 10px;">সেভ করুন</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden PDF Template -->
+<div id="pdf-template">
+    <div class="pdf-header">
+        <h1 style="margin:0;">মেস মিল রিপোর্ট</h1>
+        <p id="pdf-date"></p>
+    </div>
+    <div id="pdf-stats" style="display:flex; justify-content: space-around; margin-bottom: 20px; font-weight: bold;"></div>
+    <table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
+        <thead><tr style="background:#eee;"><th>নাম</th><th>মিল</th><th>জমা</th><th>ব্যালেন্স</th></tr></thead>
+        <tbody id="pdf-table-body"></tbody>
+    </table>
+    <div id="pdf-note-area" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px;"></div>
+</div>
+
+<script>
+    let myChart = null;
+
+    // --- Initialization ---
+    window.onload = () => {
+        document.getElementById('main-date').valueAsDate = new Date();
+        initNamazTable();
+        initQuran();
+        loadAllData();
+        if(localStorage.getItem('theme') === 'dark') toggleTheme();
+    };
+
+    function initNamazTable() {
+        const body = document.getElementById('namaz-table-body');
+        ['ফজর','যোহর','আসর','মাগরিব','এশা'].forEach(n => {
+            body.innerHTML += `<tr><td><b>${n}</b></td><td><input type="checkbox" class="n-p"></td><td><input type="checkbox" class="n-j"></td><td><input type="checkbox" class="n-q"></td></tr>`;
+        });
+    }
+
+    async function initQuran() {
+        const select = document.getElementById('surah-select');
+        try {
+            const res = await fetch('https://api.alquran.cloud/v1/surah');
+            const data = await res.json();
+            data.data.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s.number; opt.text = `${s.number}. ${s.englishName}`;
+                select.add(opt);
+            });
+        } catch(e) {}
+    }
+
+    // --- Tab & Theme ---
+    function showTab(id, btn) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+        if(id === 'dashboard') updateDashboard();
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        let isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
+    // --- Quran Hub ---
+    async function fetchQuranData() {
+        const surah = document.getElementById('surah-select').value;
+        const mode = document.getElementById('quran-mode').value;
+        const content = document.getElementById('quran-content');
+        if(!surah) return;
+        content.innerHTML = "লোড হচ্ছে...";
+        document.getElementById('quran-player').src = `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${surah}.mp3`;
+        try {
+            const resAr = await fetch(`https://api.alquran.cloud/v1/surah/${surah}`);
+            const dataAr = await resAr.json();
+            let html = "";
+            if(mode === 'both') {
+                const resBn = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/bn.bengali`);
+                const dataBn = await resBn.json();
+                dataAr.data.ayahs.forEach((a, i) => {
+                    html += `<div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                        <div class="arabic-text">${a.text}</div>
+                        <div class="bangla-text">${dataBn.data.ayahs[i].text}</div>
+                    </div>`;
+                });
+            } else {
+                html += `<div class="arabic-text" style="text-align:right;">`;
+                dataAr.data.ayahs.forEach(a => html += `${a.text} ﴿${a.numberInSurah}﴾ `);
+                html += `</div>`;
+            }
+            content.innerHTML = html;
+        } catch(e) { content.innerHTML = "ত্রুটি হয়েছে!"; }
+    }
+
+    // --- Mess Logic ---
+    function addMessRow(n='', m=0, d=0) {
+        document.getElementById('mess-table-body').innerHTML += `<tr>
+            <td><input type="text" class="m-n" value="${n}"></td>
+            <td><input type="number" class="m-m" value="${m}" oninput="calcMess()"></td>
+            <td><input type="number" class="m-d" value="${d}" oninput="calcMess()"></td>
+            <td class="m-b">0</td>
+            <td><button onclick="this.parentElement.parentElement.remove(); calcMess();" class="btn-danger">×</button></td>
+        </tr>`;
+    }
+
+    function calcMess() {
+        let totalM = 0, totalB = 0;
+        const rows = document.querySelectorAll('#mess-table-body tr');
+        rows.forEach(r => {
+            totalM += parseFloat(r.querySelector('.m-m').value)||0;
+            totalB += parseFloat(r.querySelector('.m-d').value)||0;
+        });
+        const extra = parseFloat(document.getElementById('mess-extra').value)||0;
+        const rate = totalM > 0 ? totalB / totalM : 0;
+        document.getElementById('mess-total-bazar').innerText = totalB;
+        document.getElementById('mess-total-meal').innerText = totalM;
+        document.getElementById('mess-rate').innerText = rate.toFixed(2);
+        rows.forEach(r => {
+            let m = parseFloat(r.querySelector('.m-m').value)||0;
+            let d = parseFloat(r.querySelector('.m-d').value)||0;
+            let bal = d - (m * rate + (extra/(rows.length||1)));
+            let bCell = r.querySelector('.m-b');
+            bCell.innerText = bal.toFixed(1);
+            bCell.style.color = bal < 0 ? 'red' : 'green';
+        });
+    }
+
+    function downloadMessPDF() {
+        calcMess();
+        const template = document.getElementById('pdf-template');
+        document.getElementById('pdf-date').innerText = "তারিখ: " + document.getElementById('main-date').value;
+        document.getElementById('pdf-stats').innerHTML = `
+            <span>মোট বাজার: ${document.getElementById('mess-total-bazar').innerText}৳</span>
+            <span>মোট মিল: ${document.getElementById('mess-total-meal').innerText}</span>
+            <span>মিল রেট: ${document.getElementById('mess-rate').innerText}৳</span>
+        `;
+        let tableHtml = "";
+        document.querySelectorAll('#mess-table-body tr').forEach(row => {
+            tableHtml += `<tr>
+                <td>${row.querySelector('.m-n').value}</td>
+                <td>${row.querySelector('.m-m').value}</td>
+                <td>${row.querySelector('.m-d').value}</td>
+                <td>${row.querySelector('.m-b').innerText}৳</td>
+            </tr>`;
+        });
+        document.getElementById('pdf-table-body').innerHTML = tableHtml;
+        document.getElementById('pdf-note-area').innerHTML = "<b>নোট:</b> " + document.getElementById('mess-note').value;
+
+        template.style.display = "block";
+        const opt = { margin: 0.5, filename: `mess_report_${document.getElementById('main-date').value}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+        html2pdf().from(template).set(opt).save().then(() => template.style.display = "none");
+    }
+
+    // --- Save & Load ---
+    function getDate() { return document.getElementById('main-date').value; }
+
+    function saveMess() {
+        let data = [];
+        document.querySelectorAll('#mess-table-body tr').forEach(r => {
+            data.push({n: r.querySelector('.m-n').value, m: r.querySelector('.m-m').value, d: r.querySelector('.m-d').value});
+        });
+        localStorage.setItem('mess_members', JSON.stringify(data));
+        localStorage.setItem('mess_extra', document.getElementById('mess-extra').value);
+        localStorage.setItem('mess_note', document.getElementById('mess-note').value);
+        alert('মেস ডেটা সেভ হয়েছে!'); updateDashboard();
+    }
+
+    function loadAllData() {
+        const date = getDate();
+        // Load Mess
+        const mData = JSON.parse(localStorage.getItem('mess_members')) || [{n:'', m:0, d:0}];
+        document.getElementById('mess-table-body').innerHTML = '';
+        mData.forEach(m => addMessRow(m.n, m.m, m.d));
+        document.getElementById('mess-extra').value = localStorage.getItem('mess_extra') || 0;
+        document.getElementById('mess-note').value = localStorage.getItem('mess_note') || "";
+        calcMess();
+
+        // Load Namaz
+        const nData = JSON.parse(localStorage.getItem(`namaz_${date}`)) || [];
+        document.querySelectorAll('#namaz-table-body tr').forEach((row, i) => {
+            if(nData[i]) {
+                row.querySelector('.n-p').checked = nData[i].p;
+                row.querySelector('.n-j').checked = nData[i].j;
+                row.querySelector('.n-q').checked = nData[i].q;
+            } else row.querySelectorAll('input').forEach(inp => inp.checked = false);
+        });
+
+        // Load Study
+        const sData = JSON.parse(localStorage.getItem(`study_${date}`)) || [];
+        document.getElementById('study-table-body').innerHTML = '';
+        sData.forEach(s => addStudyRow(s.sub, s.h, s.m));
+
+        // Load Finance
+        const fData = JSON.parse(localStorage.getItem(`finance_${date}`)) || [];
+        document.getElementById('expense-table-body').innerHTML = '';
+        fData.forEach(f => addExpenseRow(f.desc, f.amt));
+        
+        updateDashboard();
+    }
+
+    function saveNamaz() {
+        let data = [];
+        document.querySelectorAll('#namaz-table-body tr').forEach(r => {
+            data.push({p: r.querySelector('.n-p').checked, j: r.querySelector('.n-j').checked, q: r.querySelector('.n-q').checked});
+        });
+        localStorage.setItem(`namaz_${getDate()}`, JSON.stringify(data));
+        alert('নামাজ সেভ হয়েছে!'); updateDashboard();
+    }
+
+    function addStudyRow(sub='', h=0, m=0) {
+        document.getElementById('study-table-body').innerHTML += `<tr><td><input type="text" class="s-sub" value="${sub}"></td><td><input type="number" class="s-h" value="${h}"></td><td><input type="number" class="s-m" value="${m}"></td><td><button onclick="this.parentElement.parentElement.remove()" class="btn-danger">×</button></td></tr>`;
+    }
+
+    function saveStudy() {
+        let data = [];
+        document.querySelectorAll('#study-table-body tr').forEach(r => {
+            data.push({sub: r.querySelector('.s-sub').value, h: r.querySelector('.s-h').value, m: r.querySelector('.s-m').value});
+        });
+        localStorage.setItem(`study_${getDate()}`, JSON.stringify(data));
+        alert('স্টাডি সেভ হয়েছে!'); updateDashboard();
+    }
+
+    function addExpenseRow(desc='', amt=0) {
+        document.getElementById('expense-table-body').innerHTML += `<tr><td><input type="text" class="f-desc" value="${desc}"></td><td><input type="number" class="f-amt" value="${amt}"></td><td><button onclick="this.parentElement.parentElement.remove()" class="btn-danger">×</button></td></tr>`;
+    }
+
+    function saveFinance() {
+        let data = [];
+        document.querySelectorAll('#expense-table-body tr').forEach(r => {
+            data.push({desc: r.querySelector('.f-desc').value, amt: r.querySelector('.f-amt').value});
+        });
+        localStorage.setItem(`finance_${getDate()}`, JSON.stringify(data));
+        localStorage.setItem(`income_${getDate()}`, document.getElementById('daily-income').value);
+        alert('খরচ সেভ হয়েছে!'); updateDashboard();
+    }
+
+    function updateDashboard() {
+        const date = getDate();
+        const nData = JSON.parse(localStorage.getItem(`namaz_${date}`)) || [];
+        const nCnt = nData.filter(d => d.p).length;
+        document.getElementById('dash-namaz').innerText = `${nCnt}/5`;
+
+        const sData = JSON.parse(localStorage.getItem(`study_${date}`)) || [];
+        let sM = sData.reduce((a, b) => a + (parseInt(b.h)*60) + parseInt(b.m), 0);
+        document.getElementById('dash-study').innerText = `${Math.floor(sM/60)}h ${sM%60}m`;
+
+        const fData = JSON.parse(localStorage.getItem(`finance_${date}`)) || [];
+        document.getElementById('dash-expense').innerText = fData.reduce((a, b) => a + (parseFloat(b.amt)||0), 0) + "৳";
+        
+        document.getElementById('dash-mealrate').innerText = document.getElementById('mess-rate').innerText;
+        updateChart();
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        const labels = []; const studyData = []; const namazData = [];
+        for(let i=6; i>=0; i--) {
+            let d = new Date(); d.setDate(d.getDate()-i);
+            let ds = d.toISOString().split('T')[0];
+            labels.push(d.toLocaleDateString('bn-BD', {weekday: 'short'}));
+            let s = JSON.parse(localStorage.getItem(`study_${ds}`)) || [];
+            studyData.push(s.reduce((a, b) => a + (parseInt(b.h)||0) + (parseInt(b.m)||0)/60, 0).toFixed(1));
+            let n = JSON.parse(localStorage.getItem(`namaz_${ds}`)) || [];
+            namazData.push(n.filter(x => x.p).length);
+        }
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [
+                { label: 'পড়া (ঘণ্টা)', data: studyData, borderColor: '#6366f1', tension: 0.4 },
+                { label: 'নামাজ (ওয়াক্ত)', data: namazData, borderColor: '#22c55e', tension: 0.4 }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function shareMess() {
+        let text = `--- মেস রিপোর্ট (${getDate()}) ---\n`;
+        text += `মিল রেট: ${document.getElementById('mess-rate').innerText} ৳\n\n`;
+        document.querySelectorAll('#mess-table-body tr').forEach(row => {
+            text += `${row.querySelector('.m-n').value}: ${row.querySelector('.m-b').innerText} ৳\n`;
+        });
+        navigator.clipboard.writeText(text).then(() => alert('রিপোর্ট কপি হয়েছে!'));
+    }
+</script>
+</body>
+</html>
