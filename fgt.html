@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>স্মার্ট ডিজিটাল হাব - প্রোডাক্টিভিটি ও কুরআন</title>
+    
+    <!-- External Resources -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&family=Amiri&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --quran-color: #059669;
+            --bg-light: #f8fafc;
+            --card-light: #ffffff;
+            --text-light: #1e293b;
+            --border-light: #e2e8f0;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-dark: #f1f5f9;
+            --border-dark: #334155;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            margin: 0; padding: 0;
+            transition: var(--transition);
+            overflow-x: hidden;
+        }
+
+        body.dark-mode { background-color: var(--bg-dark); color: var(--text-dark); }
+
+        .app-container { max-width: 1200px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px; color: white;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .theme-btn { background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 18px; backdrop-filter: blur(5px); }
+
+        /* Navigation */
+        .nav-scroller { display: flex; gap: 12px; padding: 10px 5px; margin-bottom: 25px; overflow-x: auto; scrollbar-width: none; }
+        .nav-scroller::-webkit-scrollbar { display: none; }
+        .nav-btn {
+            white-space: nowrap; padding: 12px 20px; border-radius: 15px;
+            border: 1px solid var(--border-light); background: var(--card-light);
+            color: var(--text-light); cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .dark-mode .nav-btn { background: var(--card-dark); border-color: var(--border-dark); color: var(--text-dark); }
+        .nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-3px); }
+
+        /* Sections */
+        .content-section { display: none; animation: slideUp 0.5s ease; }
+        .content-section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--card-light); border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border-light); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .dark-mode .card { background: var(--card-dark); border-color: var(--border-dark); }
+        h2 { font-size: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+        /* Tables & UI */
+        .table-container { overflow-x: auto; border-radius: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: var(--bg-light); padding: 15px; border-bottom: 2px solid var(--border-light); }
+        .dark-mode th { background: #1e293b; border-color: var(--border-dark); }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); }
+        .dark-mode td { border-color: var(--border-dark); }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-light); color: var(--text-light); outline: none; }
+        .dark-mode input, .dark-mode select, .dark-mode textarea { background: #0f172a; border-color: var(--border-dark); color: var(--text-dark); }
+        .btn { padding: 12px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: white; }
+        .btn-primary { background: var(--primary); } .btn-success { background: var(--success); } .btn-danger { background: var(--danger); } .btn-warning { background: var(--warning); }
+
+        /* Quran Specific */
+        .quran-header { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .quran-display { max-height: 600px; overflow-y: auto; padding-right: 10px; }
+        .ayah-card { padding: 20px; border-bottom: 1px solid var(--border-light); }
+        .dark-mode .ayah-card { border-color: var(--border-dark); }
+        .arabic-text { font-family: 'Amiri', serif; font-size: 28px; direction: rtl; text-align: right; margin-bottom: 10px; line-height: 1.8; }
+        .bangla-text { font-size: 16px; color: var(--primary); line-height: 1.5; }
+        .audio-player { width: 100%; margin-top: 20px; border-radius: 10px; height: 40px; }
+
+        /* Common Elements */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { padding: 15px; border-radius: 15px; text-align: center; background: var(--bg-light); border: 1px solid var(--border-light); }
+        .dark-mode .stat-card { background: #1e293b; border-color: var(--border-dark); }
+        .stat-card span { font-size: 20px; font-weight: 700; color: var(--primary); display: block; }
+        .chart-container { height: 300px; position: relative; }
+
+        @media (max-width: 768px) {
+            .nav-scroller { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-light); padding: 15px; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); border-top: 1px solid var(--border-light); }
+            .dark-mode .nav-scroller { background: var(--card-dark); border-color: var(--border-dark); }
+            .app-container { padding-bottom: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="logo"><i class="fa-solid fa-shapes"></i> স্মার্ট ডিজিটাল হাব</div>
+        <button class="theme-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+    </header>
+
+    <div class="nav-scroller">
+        <button class="nav-btn active" onclick="showTab('dashboard', this)"><i class="fa-solid fa-chart-line"></i> ড্যাশবোর্ড</button>
+        <button class="nav-btn" onclick="showTab('quran', this)"><i class="fa-solid fa-book-quran"></i> কুরআন হাব</button>
+        <button class="nav-btn" onclick="showTab('namaz', this)"><i class="fa-solid fa-mosque"></i> নামাজ</button>
+        <button class="nav-btn" onclick="showTab('study', this)"><i class="fa-solid fa-book-open"></i> পড়াশোনা</button>
+        <button class="nav-btn" onclick="showTab('mess', this)"><i class="fa-solid fa-utensils"></i> মেস ম্যানেজার</button>
+        <button class="nav-btn" onclick="showTab('finance', this)"><i class="fa-solid fa-wallet"></i> খরচ</button>
+    </div>
+
+    <!-- তারিখ নির্বাচন (সব ট্যাবে কাজ করবে) -->
+    <div class="card" id="date-selector" style="text-align: center; padding: 15px;">
+        <label>📅 <b>তারিখ:</b> </label>
+        <input type="date" id="main-date" style="width: auto; margin-left: 10px;" onchange="loadAllData()">
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboard" class="content-section active">
+        <div class="stats-grid">
+            <div class="stat-card"><b>আজকের নামাজ</b><span id="dash-namaz">0/5</span></div>
+            <div class="stat-card"><b>আজকের পড়া</b><span id="dash-study">0h</span></div>
+            <div class="stat-card"><b>আজকের খরচ</b><span id="dash-expense">0৳</span></div>
+            <div class="stat-card"><b>মেস মিল রেট</b><span id="dash-mealrate">0.0</span></div>
+        </div>
+        <div class="card">
+            <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI স্ট্যাটাস অ্যানালাইসিস</h2>
+            <div id="ai-insight" style="font-style: italic; color: var(--secondary);">ডেটা লোড হচ্ছে...</div>
+        </div>
+        <div class="card">
+            <div class="chart-container"><canvas id="activityChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- কুরআন হাব (নতুন ট্যাব) -->
+    <div id="quran" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-book-quran"></i> আল-কুরআন হাব</h2>
+            <div class="quran-header">
+                <select id="surah-select" onchange="fetchQuranData()" style="flex: 2; min-width: 150px;">
+                    <option value="">সূরা নির্বাচন করুন...</option>
+                </select>
+                <select id="quran-mode" onchange="fetchQuranData()" style="flex: 1; min-width: 150px;">
+                    <option value="both">আরবি + বাংলা</option>
+                    <option value="arabic">শুধু আরবি</option>
+                </select>
+            </div>
+            
+            <div id="quran-audio-container">
+                <audio id="quran-player" class="audio-player" controls></audio>
+            </div>
+
+            <div id="quran-content" class="quran-display card" style="margin-top: 20px; background: var(--bg-light);">
+                <p style="text-align: center; padding: 20px;">সূরা নির্বাচন করলে আয়াত এখানে লোড হবে...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- অন্যান্য ট্যাব (হুবহু আগের মত) -->
+    <div id="namaz" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-mosque"></i> নামাজ ট্র্যাকার</h2>
+            <div class="table-container"><table><thead><tr><th>ওয়াক্ত</th><th>আদায়</th><th>জামায়াত</th><th>কাযা</th></tr></thead><tbody id="namaz-table-body"></tbody></table></div>
+            <button class="btn btn-primary" onclick="saveNamaz()" style="width: 100%; margin-top: 15px;"><i class="fa-solid fa-save"></i> সেভ করুন</button>
+        </div>
+    </div>
+
+    <div id="study" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-book-open"></i> স্টাডি ট্র্যাকার</h2>
+            <div class="stat-card"><b>টার্গেট:</b> <input type="number" id="study-target" value="5" style="width: 60px; text-align: center;"> ঘণ্টা</div>
+            <div class="table-container"><table><thead><tr><th>বিষয়</th><th>ঘণ্টা</th><th>মিনিট</th><th>#</th></tr></thead><tbody id="study-table-body"></tbody></table></div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-warning" onclick="addStudyRow()"><i class="fa-solid fa-plus"></i> নতুন বিষয়</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveStudy()"><i class="fa-solid fa-save"></i> সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mess" class="content-section">
+        <div class="stats-grid">
+            <div class="stat-card"><b>মোট বাজার</b><span id="mess-total-bazar">0</span>৳</div>
+            <div class="stat-card"><b>মোট মিল</b><span id="mess-total-meal">0</span></div>
+            <div class="stat-card"><b>মিল রেট</b><span id="mess-rate">0.0</span>৳</div>
+            <div class="stat-card"><b>অন্যান্য খরচ</b><input type="number" id="mess-extra" value="0" oninput="calcMess()" style="width: 60px;"></div>
+        </div>
+        <div class="card">
+            <h2><i class="fa-solid fa-users"></i> মেস মিল শিট</h2>
+            <div class="table-container"><table><thead><tr><th>নাম</th><th>মিল</th><th>জমা</th><th>ব্যালেন্স</th><th>#</th></tr></thead><tbody id="mess-table-body"></tbody></table></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px;">
+                <button class="btn btn-success" onclick="addMessRow()">+ সদস্য</button>
+                <button class="btn btn-primary" onclick="saveMess()">সেভ</button>
+                <button class="btn btn-warning" onclick="shareMess()"><i class="fa-solid fa-share"></i> শেয়ার</button>
+            </div>
+            <textarea id="mess-note" placeholder="মেসের বিশেষ নোট..." style="margin-top: 15px; height: 80px;"></textarea>
+        </div>
+    </div>
+
+    <div id="finance" class="content-section">
+        <div class="card">
+            <h2><i class="fa-solid fa-wallet"></i> দৈনিক খরচ</h2>
+            <input type="number" id="daily-income" placeholder="আজকের আয়/বাজেট" style="margin-bottom: 15px;">
+            <div class="table-container"><table><thead><tr><th>বিবরণ</th><th>টাকা</th><th>#</th></tr></thead><tbody id="expense-table-body"></tbody></table></div>
+            <button class="btn btn-warning" onclick="addExpenseRow()" style="margin-top: 15px;">+ খরচ</button>
+            <button class="btn btn-primary" onclick="saveFinance()" style="width: 100%; margin-top: 10px;">সেভ করুন</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentTheme = 'light';
+    let myChart = null;
+
+    // কুরআন হাব লজিক
+    async function initQuran() {
+        const select = document.getElementById('surah-select');
+        try {
+            const res = await fetch('https://api.alquran.cloud/v1/surah');
+            const data = await res.json();
+            data.data.forEach(surah => {
+                const opt = document.createElement('option');
+                opt.value = surah.number;
+                opt.text = `${surah.number}. ${surah.englishName} (${surah.name})`;
+                select.add(opt);
+            });
+        } catch (e) { console.log("সূরা লিস্ট লোড করতে সমস্যা হয়েছে।"); }
+    }
+
+    async function fetchQuranData() {
+        const surahNum = document.getElementById('surah-select').value;
+        const mode = document.getElementById('quran-mode').value;
+        const content = document.getElementById('quran-content');
+        const audio = document.getElementById('quran-player');
+        
+        if(!surahNum) return;
+
+        content.innerHTML = "<p style='text-align:center;'>লোড হচ্ছে...</p>";
+        audio.src = `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${surahNum}.mp3`;
+
+        try {
+            const resAr = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}`);
+            const dataAr = await resAr.json();
+            
+            let html = "";
+            if(mode === 'both') {
+                const resBn = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/bn.bengali`);
+                const dataBn = await resBn.json();
+                dataAr.data.ayahs.forEach((ayah, i) => {
+                    html += `<div class="ayah-card">
+                        <div class="arabic-text">${ayah.text} ﴿${ayah.numberInSurah}﴾</div>
+                        <div class="bangla-text">${dataBn.data.ayahs[i].text}</div>
+                    </div>`;
+                });
+            } else {
+                html += `<div class="ayah-card" style="text-align:right; font-size: 32px; line-height: 2.5;">`;
+                dataAr.data.ayahs.forEach(ayah => {
+                    html += `${ayah.text} ﴿${ayah.numberInSurah}﴾ `;
+                });
+                html += `</div>`;
+            }
+            content.innerHTML = html;
+        } catch (e) { content.innerHTML = "ডেটা লোড করতে সমস্যা হয়েছে। ইন্টারনেট কানেকশন চেক করুন।"; }
+    }
+
+    // আগের সব ফাংশনালিটি
+    window.onload = () => {
+        document.getElementById('main-date').valueAsDate = new Date();
+        initApp();
+        initQuran();
+        loadAllData();
+        if(localStorage.getItem('theme') === 'dark') toggleTheme();
+    };
+
+    function initApp() {
+        const namazBody = document.getElementById('namaz-table-body');
+        ['ফজর', 'যোহর', 'আসর', 'মাগরিব', 'এশা'].forEach(n => {
+            namazBody.innerHTML += `<tr><td><b>${n}</b></td><td><input type="checkbox" class="n-prayed"></td><td><input type="checkbox" class="n-jam"></td><td><input type="checkbox" class="n-qaza"></td></tr>`;
+        });
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem('theme', currentTheme);
+        document.getElementById('theme-icon').className = currentTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        updateChart();
+    }
+
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        if(tabId === 'dashboard') updateDashboard();
+    }
+
+    // --- তথ্য সেভ ও লোড লজিক ---
+    function getDate() { return document.getElementById('main-date').value; }
+
+    function loadAllData() {
+        const date = getDate();
+        // Namaz Load
+        const nData = JSON.parse(localStorage.getItem(`namaz_${date}`)) || [];
+        document.querySelectorAll('#namaz-table-body tr').forEach((row, i) => {
+            if(nData[i]) {
+                row.querySelector('.n-prayed').checked = nData[i].p;
+                row.querySelector('.n-jam').checked = nData[i].j;
+                row.querySelector('.n-qaza').checked = nData[i].q;
+            } else row.querySelectorAll('input').forEach(inp => inp.checked = false);
+        });
+
+        // Study Load
+        const sData = JSON.parse(localStorage.getItem(`study_${date}`)) || [{sub: 'বাংলা', h:0, m:0}];
+        const sBody = document.getElementById('study-table-body'); sBody.innerHTML = '';
+        sData.forEach(s => addStudyRow(s.sub, s.h, s.m));
+
+        // Mess Load
+        const mData = JSON.parse(localStorage.getItem('mess_members')) || [{name:'', meal:0, dep:0}];
+        const mBody = document.getElementById('mess-table-body'); mBody.innerHTML = '';
+        mData.forEach(m => addMessRow(m.name, m.meal, m.dep));
+        document.getElementById('mess-extra').value = localStorage.getItem('mess_extra') || 0;
+        calcMess();
+
+        updateDashboard();
+    }
+
+    function addStudyRow(sub='', h=0, m=0) {
+        document.getElementById('study-table-body').innerHTML += `<tr><td><input type="text" class="s-sub" value="${sub}"></td><td><input type="number" class="s-h" value="${h}"></td><td><input type="number" class="s-m" value="${m}"></td><td><button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">&times;</button></td></tr>`;
+    }
+
+    function addMessRow(name='', meal=0, dep=0) {
+        document.getElementById('mess-table-body').innerHTML += `<tr><td><input type="text" class="m-name" value="${name}"></td><td><input type="number" class="m-meal" value="${meal}" oninput="calcMess()"></td><td><input type="number" class="m-dep" value="${dep}" oninput="calcMess()"></td><td class="m-bal">0</td><td><button class="btn btn-danger" onclick="this.parentElement.parentElement.remove(); calcMess();">&times;</button></td></tr>`;
+    }
+
+    function addExpenseRow(desc='', amt=0) {
+        document.getElementById('expense-table-body').innerHTML += `<tr><td><input type="text" class="f-desc" value="${desc}"></td><td><input type="number" class="f-amt" value="${amt}"></td><td><button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">&times;</button></td></tr>`;
+    }
+
+    function saveNamaz() {
+        const data = [];
+        document.querySelectorAll('#namaz-table-body tr').forEach(row => {
+            data.push({ p: row.querySelector('.n-prayed').checked, j: row.querySelector('.n-jam').checked, q: row.querySelector('.n-qaza').checked });
+        });
+        localStorage.setItem(`namaz_${getDate()}`, JSON.stringify(data));
+        alert('নামাজ সেভ হয়েছে!'); updateDashboard();
+    }
+
+    function saveStudy() {
+        const data = []; let totalM = 0;
+        document.querySelectorAll('#study-table-body tr').forEach(row => {
+            const h = parseInt(row.querySelector('.s-h').value)||0, m = parseInt(row.querySelector('.s-m').value)||0;
+            totalM += (h*60)+m; data.push({sub: row.querySelector('.s-sub').value, h, m});
+        });
+        localStorage.setItem(`study_${getDate()}`, JSON.stringify(data));
+        if(totalM >= document.getElementById('study-target').value*60) confetti({particleCount: 100, spread: 70});
+        alert('স্টাডি সেভ হয়েছে!'); updateDashboard();
+    }
+
+    function calcMess() {
+        let totalM = 0, totalB = 0;
+        const rows = document.querySelectorAll('#mess-table-body tr');
+        rows.forEach(row => {
+            totalM += parseFloat(row.querySelector('.m-meal').value)||0;
+            totalB += parseFloat(row.querySelector('.m-dep').value)||0;
+        });
+        const rate = totalM > 0 ? totalB / totalM : 0;
+        document.getElementById('mess-total-bazar').innerText = totalB;
+        document.getElementById('mess-total-meal').innerText = totalM;
+        document.getElementById('mess-rate').innerText = rate.toFixed(2);
+        rows.forEach(row => {
+            const m = parseFloat(row.querySelector('.m-meal').value)||0, d = parseFloat(row.querySelector('.m-dep').value)||0;
+            const bal = d - (m * rate);
+            const balCell = row.querySelector('.m-bal');
+            balCell.innerText = bal.toFixed(1);
+            balCell.style.color = bal < 0 ? 'red' : 'green';
+        });
+    }
+
+    function updateDashboard() {
+        const date = getDate();
+        const nData = JSON.parse(localStorage.getItem(`namaz_${date}`)) || [];
+        const nCnt = nData.filter(d => d.p).length;
+        document.getElementById('dash-namaz').innerText = `${nCnt}/5`;
+
+        const sData = JSON.parse(localStorage.getItem(`study_${date}`)) || [];
+        let sM = sData.reduce((a, b) => a + (parseInt(b.h)*60) + parseInt(b.m), 0);
+        document.getElementById('dash-study').innerText = `${Math.floor(sM/60)}h ${sM%60}m`;
+        
+        document.getElementById('dash-mealrate').innerText = document.getElementById('mess-rate').innerText;
+        
+        document.getElementById('ai-insight').innerText = nCnt === 5 ? "অসাধারণ! আপনি আজ সব নামাজ পড়েছেন।" : "চেষ্টা করুন সব ওয়াক্ত নামাজ পড়ার।";
+        updateChart();
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        const labels = []; const studyData = []; const namazData = [];
+        for(let i=6; i>=0; i--) {
+            let d = new Date(); d.setDate(d.getDate()-i);
+            let ds = d.toISOString().split('T')[0];
+            labels.push(d.toLocaleDateString('bn-BD', {weekday: 'short'}));
+            let s = JSON.parse(localStorage.getItem(`study_${ds}`)) || [];
+            studyData.push(s.reduce((a, b) => a + (parseInt(b.h)||0) + (parseInt(b.m)||0)/60, 0).toFixed(1));
+            let n = JSON.parse(localStorage.getItem(`namaz_${ds}`)) || [];
+            namazData.push(n.filter(x => x.p).length);
+        }
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'পড়া (ঘণ্টা)', data: studyData, borderColor: '#6366f1', tension: 0.4 },
+                    { label: 'নামাজ (ওয়াক্ত)', data: namazData, borderColor: '#22c55e', tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+</script>
+</body>
+</html>
